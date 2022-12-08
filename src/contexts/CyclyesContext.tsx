@@ -1,8 +1,8 @@
-import { createContext, useState } from 'react'
+import { createContext, ReactNode, useState } from 'react'
 
 interface CreateCyclesData {
-    task: string
-    minutesAmount: number
+  task: string
+  minutesAmount: number
 }
 
 interface Cycle {
@@ -15,17 +15,25 @@ interface Cycle {
 }
 
 interface CyclesContextType {
+  cycles: Cycle[]
   activeCycle: Cycle | undefined
   activeCycleId: string | null
   amountSecondsPassed: number
   markCurrentCycleAsFinished: () => void
   setSecondsPassed: (seconds: number) => void
-  createNewCycle: ()
+  createNewCycle: (data: CreateCyclesData) => void
+  interruptCurrentCycle: () => void
 }
 
 export const CyclesContext = createContext({} as CyclesContextType)
 
-export function CyclesContextProvider() {
+interface CyclesContextProviderProps {
+  children: ReactNode
+}
+
+export function CyclesContextProvider({
+  children,
+}: CyclesContextProviderProps) {
   const [cycles, setCycles] = useState<Cycle[]>([])
   const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
   const [amountSecondsPassed, setAmountSecondsPassed] = useState(0)
@@ -48,7 +56,7 @@ export function CyclesContextProvider() {
     )
   }
 
-  function createNewCycle(data: NewCycleFormData) {
+  function createNewCycle(data: CreateCyclesData) {
     const id = String(new Date().getTime())
 
     const newCycle: Cycle = {
@@ -61,8 +69,6 @@ export function CyclesContextProvider() {
     setCycles((state) => [...state, newCycle])
     setActiveCycleId(id)
     setAmountSecondsPassed(0)
-
-    reset()
   }
 
   function interruptCurrentCycle() {
@@ -81,12 +87,17 @@ export function CyclesContextProvider() {
   return (
     <CyclesContext.Provider
       value={{
+        cycles,
         activeCycle,
         activeCycleId,
         markCurrentCycleAsFinished,
         amountSecondsPassed,
         setSecondsPassed,
+        createNewCycle,
+        interruptCurrentCycle,
       }}
-    ></CyclesContext.Provider>
+    >
+      {children}
+    </CyclesContext.Provider>
   )
 }
